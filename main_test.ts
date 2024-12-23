@@ -49,11 +49,6 @@ Deno.test("server actions > forms > makeFormHandler", async () => {
         message: `API key created for ${formFields.name}.`,
       }
     }),
-    makeInvalidPayloadError: () => new InvalidPayload({ success: false, message: 'Invalid Payload', reason: 'Invalid Payload' }),
-    makeInternalServerError: () => new InternalServerError({ success: false, message: `Hello World`, reason: 'Hello World' }),
-    layer: Layer.empty.pipe(
-      Layer.provide(Next.Default),
-    )
   })
 
   const result = await createApiKeyAction({ success: false }, mockFormData)
@@ -61,5 +56,39 @@ Deno.test("server actions > forms > makeFormHandler", async () => {
   assertEquals(result, {
     success: true,
     message: `API key created for John Doe.`,
+  })
+})
+
+export class MockService extends Effect.Service<MockService>()("next-effect/test/MockService", {
+  sync: () => {
+    return {
+      foo: 'bar'
+    } as const;
+  },
+  accessors: true,
+}) {}
+
+Deno.test("server actions > forms > makeFormHandler > custom layer", async () => {
+  const mockFormData = new FormData()
+  mockFormData.set("name", "John Doe")
+  const createApiKeyAction = makeFormHandler({
+    state: ApiKeyState,
+    fields: ApiKeyFormSchema,
+    action: async (prevState, formFields) => Effect.gen(function*() {
+      const { foo } = yield* MockService
+      yield* Effect.sleep("2 seconds")
+      return {
+        success: true,
+        message: `API key created for ${formFields.name}. ${foo}`,
+      }
+    }),
+    layer: MockService.Default,
+  })
+
+  const result = await createApiKeyAction({ success: false }, mockFormData)
+
+  assertEquals(result, {
+    success: true,
+    message: `API key created for John Doe. bar`,
   })
 })

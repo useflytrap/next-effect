@@ -7,7 +7,7 @@ export type DefaultLogContext = {
 
 export type RequestLogContext = DefaultLogContext
 
-export type RequestContextType = RequestLogContext & { rawRequest: unknown | Request }
+export type RequestContextType = RequestLogContext & { rawRequest: unknown | Request | FormData }
 export class RequestContext extends Context.Tag("flytrap/server/RequestContext")<
   RequestContext,
   RequestContextType

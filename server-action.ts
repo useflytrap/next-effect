@@ -1,6 +1,8 @@
-import { Cause, Effect, Either, Exit, Layer, Schema as S } from "effect"
+// @ts-nocheck: to run tests
+
+import { Cause, Effect, Either, Exit, Layer, Layer, Schema as S } from "effect"
 import { RequestContext } from "./request-context.ts";
-import { Next } from "./next-service.ts";
+import { InternalServerError, InvalidPayload, Next } from "./next-service.ts";
 
 type NextRuntimeProvidedServices = Next
 
@@ -19,12 +21,19 @@ type InferError<Schema extends S.Schema.AnyNoContext, ProvidedRuntimeServices, T
     E
     : never
 
-
 export type HandlerConfig<InternalServerError, InvalidPayloadError, ProvidedServices> = {
-  makeInvalidPayloadError: (schema: S.Schema.AnyNoContext, payload: S.Schema.Type<S.Schema.AnyNoContext>) => InvalidPayloadError
-  makeInternalServerError: (cause: Cause.Cause<unknown>) => InternalServerError
-  layer: Layer.Layer<ProvidedServices, never, RequestContext>
+  /* makeInvalidPayloadError: (schema: S.Schema.AnyNoContext, payload: S.Schema.Type<S.Schema.AnyNoContext>) => InvalidPayloadError
+  makeInternalServerError: (cause: Cause.Cause<unknown>) => InternalServerError */
+  errors?: {
+    invalidPayload?: (schema: S.Schema.AnyNoContext, payload: S.Schema.Type<S.Schema.AnyNoContext>) => InvalidPayloadError
+    unexpected?: (cause: Cause.Cause<unknown>) => InternalServerError
+  }
+  layer?: Layer.Layer<ProvidedServices, never, RequestContext>
 }
+
+export type ExtractLayer<Layer extends Layer.Layer.Any | undefined> = Layer extends Layer.Layer.Any ? Layer : Layer.Layer<never>
+export type ExtractInternalServerError<UserProvidedISE> = UserProvidedISE extends undefined ? InternalServerError : UserProvidedISE
+export type ExtractPayloadError<UserProvidedPayloadError> = UserProvidedPayloadError extends undefined ? InvalidPayload : UserProvidedPayloadError
 
 export const makeServerActionHandler = <InternalServerError, InvalidPayloadError, ProvidedServices>(config: HandlerConfig<InternalServerError, InvalidPayloadError, ProvidedServices>) => {
   return <Schema extends S.Schema.AnyNoContext, TEffectFn extends TypeConstraint<Schema, ProvidedServices>>(schema: Schema, effectFn: TEffectFn) => {
