@@ -1,0 +1,5 @@
+- OTEL setup
+- Request tracing
+  - Easily add context to traces
+  - Maybe some auth?
+- Way to define response types / errors
