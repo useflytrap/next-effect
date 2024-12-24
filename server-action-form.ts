@@ -1,7 +1,6 @@
-import { Schema as S, Effect, Layer, ParseResult } from "effect"
-import { HandlerConfig, handleServerActionPayload } from "./server-action.ts";
+import { Schema as S, Effect, Layer, ParseResult, Exit } from "effect"
+import { HandlerConfig } from "./server-action.ts";
 import { Next } from "./next-service.ts";
-import { makeServerActionHandler } from "./server-action.ts";
 import { RequestContext } from "./request-context.ts";
 
 export const validateFormData = <FormFields extends S.Schema.AnyNoContext>(schema: FormFields, formData: FormData): Effect.Effect<S.Schema.Type<FormFields>, DeriveError<FormFields>> => S.decodeUnknown(schema, { errors: 'all' })(Object.fromEntries(formData.entries())).pipe(
@@ -32,7 +31,6 @@ export type FormHandlerConfig<State extends S.Schema.AnyNoContext, FormFields ex
 export const makeFormHandler = <State extends S.Schema.AnyNoContext, FormFields extends S.Schema.AnyNoContext, InternalServerError, InvalidPayloadError, ProvidedServices>(config: FormHandlerConfig<State, FormFields, InternalServerError, InvalidPayloadError, ProvidedServices>) => {
   const mergedContext = Layer.mergeAll(config.layer ?? Layer.empty, Next.Default)
   return async (prevState: FormState<State, FormFields>, formData: FormData): Promise<FormState<State, FormFields>> => {
-
     const requestContext = RequestContext.of({
       rawRequest: formData,
       type: 'server-action',
@@ -49,6 +47,10 @@ export const makeFormHandler = <State extends S.Schema.AnyNoContext, FormFields 
     )
 
     // @ts-expect-error: typescript fails to infer but its right
-    return await Effect.runPromise(effect)
+    const programExit = await Effect.runPromiseExit(effect)
+    if (Exit.isSuccess(programExit)) {
+      return programExit.value as FormState<State, FormFields>
+    }
+    return programExit.error as FormState<State, FormFields>
   }
 }

@@ -2,7 +2,7 @@
 
 import { Cause, Effect, Either, Exit, Layer, Layer, Schema as S } from "effect"
 import { RequestContext } from "./request-context.ts";
-import { InternalServerError, InvalidPayload, Next } from "./next-service.ts";
+import { InternalServerError, invalidPayload, InvalidPayload, Next } from "./next-service.ts";
 
 type NextRuntimeProvidedServices = Next
 
@@ -40,7 +40,7 @@ export const makeServerActionHandler = <InternalServerError, InvalidPayloadError
     const mergedContext = Layer.mergeAll(config.layer, Next.Default)
     return async function (payload: S.Schema.Type<Schema>): Promise<InferSuccess<Schema, ProvidedServices, TEffectFn> | InferError<Schema, ProvidedServices, TEffectFn> | InternalServerError | InvalidPayloadError> {
       const validatedPayload = S.decodeUnknownEither(schema)(payload).pipe(
-        Either.mapLeft(() => config.makeInvalidPayloadError(schema, payload))
+        Either.mapLeft(() => config.errors?.invalidPayload?.(schema, payload) ?? invalidPayload)
       )
       if (Either.isLeft(validatedPayload)) return validatedPayload.left
 

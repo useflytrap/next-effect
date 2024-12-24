@@ -38,7 +38,7 @@ Deno.test("server actions > forms > payload validation", async () => {
 
 Deno.test("server actions > forms > makeFormHandler", async () => {
   const mockFormData = new FormData()
-  mockFormData.set("name", "John Doe")
+  mockFormData.set("name", "John")
   const createApiKeyAction = makeFormHandler({
     state: ApiKeyState,
     fields: ApiKeyFormSchema,
