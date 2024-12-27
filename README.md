@@ -1,4 +1,5 @@
 - OTEL setup
+  - Work with Effect Dev Tools
 - Request tracing
   - Easily add context to traces
   - Maybe some auth?

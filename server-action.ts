@@ -1,6 +1,7 @@
 import { Cause, Effect, Either, Exit, Layer, Schema as S } from "effect"
 import { RequestContext } from "./request-context.ts";
 import { Next } from "./next-service.ts";
+import { ParseError } from "effect/ParseResult";
 
 type NextRuntimeProvidedServices = Next
 
@@ -19,9 +20,14 @@ type InferError<Schema extends S.Schema.AnyNoContext, ProvidedRuntimeServices, T
     E
     : never
 
+export type InvalidPayloadOptions = {
+  schema: S.Schema.AnyNoContext
+  payload: S.Schema.Type<S.Schema.AnyNoContext>
+  error: ParseError
+}
 export type HandlerConfig<InternalServerError, InvalidPayloadError, ProvidedServices> = {
   errors: {
-    invalidPayload: (schema: S.Schema.AnyNoContext, payload: S.Schema.Type<S.Schema.AnyNoContext>) => InvalidPayloadError
+    invalidPayload: (options: InvalidPayloadOptions) => InvalidPayloadError
     unexpected: (cause: Cause.Cause<unknown>) => InternalServerError
   }
   layer?: Layer.Layer<ProvidedServices, never, RequestContext>
@@ -36,7 +42,7 @@ export const makeServerActionHandler = <InternalServerError, InvalidPayloadError
     const mergedContext = Layer.mergeAll(config.layer ?? Layer.empty, Next.Default)
     return async function (payload: S.Schema.Type<Schema>): Promise<InferSuccess<Schema, ProvidedServices, TEffectFn> | InferError<Schema, ProvidedServices, TEffectFn> | InternalServerError | InvalidPayloadError> {
       const validatedPayload = S.decodeUnknownEither(schema)(payload).pipe(
-        Either.mapLeft(() => config.errors.invalidPayload(schema, payload))
+        Either.mapLeft((error) => config.errors.invalidPayload({ schema, payload, error }))
       )
       if (Either.isLeft(validatedPayload)) return validatedPayload.left
 
