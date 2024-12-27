@@ -1,8 +1,6 @@
-// @ts-nocheck: to run tests
-
 import { Cause, Effect, Either, Exit, Layer, Schema as S } from "effect"
 import { RequestContext } from "./request-context.ts";
-import { InternalServerError, invalidPayload, InvalidPayload, Next } from "./next-service.ts";
+import { Next } from "./next-service.ts";
 
 type NextRuntimeProvidedServices = Next
 
@@ -22,28 +20,29 @@ type InferError<Schema extends S.Schema.AnyNoContext, ProvidedRuntimeServices, T
     : never
 
 export type HandlerConfig<InternalServerError, InvalidPayloadError, ProvidedServices> = {
-  /* errors?: {
-    invalidPayload?: (schema: S.Schema.AnyNoContext, payload: S.Schema.Type<S.Schema.AnyNoContext>) => InvalidPayloadError
-    unexpected?: (cause: Cause.Cause<unknown>) => InternalServerError
-  } */
+  errors: {
+    invalidPayload: (schema: S.Schema.AnyNoContext, payload: S.Schema.Type<S.Schema.AnyNoContext>) => InvalidPayloadError
+    unexpected: (cause: Cause.Cause<unknown>) => InternalServerError
+  }
   layer?: Layer.Layer<ProvidedServices, never, RequestContext>
 }
 
-export type ExtractLayer<Layer extends Layer.Layer.Any | undefined> = Layer extends Layer.Layer.Any ? Layer : Layer.Layer<never>
+/* export type ExtractLayer<Layer extends Layer.Layer.Any | undefined> = Layer extends Layer.Layer.Any ? Layer : Layer.Layer<never>
 export type ExtractInternalServerError<UserProvidedISE> = UserProvidedISE extends undefined ? InternalServerError : UserProvidedISE
-export type ExtractPayloadError<UserProvidedPayloadError> = UserProvidedPayloadError extends undefined ? InvalidPayload : UserProvidedPayloadError
+export type ExtractPayloadError<UserProvidedPayloadError> = UserProvidedPayloadError extends undefined ? InvalidPayload : UserProvidedPayloadError */
 
 export const makeServerActionHandler = <InternalServerError, InvalidPayloadError, ProvidedServices>(config: HandlerConfig<InternalServerError, InvalidPayloadError, ProvidedServices>) => {
   return <Schema extends S.Schema.AnyNoContext, TEffectFn extends TypeConstraint<Schema, ProvidedServices>>(schema: Schema, effectFn: TEffectFn) => {
-    const mergedContext = Layer.mergeAll(config.layer, Next.Default)
+    const mergedContext = Layer.mergeAll(config.layer ?? Layer.empty, Next.Default)
     return async function (payload: S.Schema.Type<Schema>): Promise<InferSuccess<Schema, ProvidedServices, TEffectFn> | InferError<Schema, ProvidedServices, TEffectFn> | InternalServerError | InvalidPayloadError> {
       const validatedPayload = S.decodeUnknownEither(schema)(payload).pipe(
-        Either.mapLeft(() => invalidPayload)
+        Either.mapLeft(() => config.errors.invalidPayload(schema, payload))
       )
       if (Either.isLeft(validatedPayload)) return validatedPayload.left
 
       const effect = await effectFn(validatedPayload.right)
       const responseExit = await Effect.runPromiseExit(
+        // @ts-expect-error: this is correct
         effect.pipe(
           Effect.provide(mergedContext),
           Effect.provideService(
@@ -65,12 +64,12 @@ export const makeServerActionHandler = <InternalServerError, InvalidPayloadError
         return responseExit.cause.error as InferError<Schema, ProvidedServices, TEffectFn>;
       }
 
-      return new InternalServerError({ success: false, message: 'Internal Server Error', reason: 'internal-server-error' })
+      return config.errors.unexpected(responseExit.cause)
     }
   }
 }
 
-export type HandlePayloadConfig<
+/* export type HandlePayloadConfig<
   Schema extends S.Schema.AnyNoContext,
   ProvidedServices,
   TEffectFn extends TypeConstraint<Schema, ProvidedServices>,
@@ -121,4 +120,4 @@ export const handleServerActionPayload = async <
   }
 
   return config.makeInternalServerError(responseExit.cause)
-}
+} */
