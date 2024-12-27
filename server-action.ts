@@ -1,6 +1,6 @@
 // @ts-nocheck: to run tests
 
-import { Cause, Effect, Either, Exit, Layer, Layer, Schema as S } from "effect"
+import { Cause, Effect, Either, Exit, Layer, Schema as S } from "effect"
 import { RequestContext } from "./request-context.ts";
 import { InternalServerError, invalidPayload, InvalidPayload, Next } from "./next-service.ts";
 
@@ -22,12 +22,10 @@ type InferError<Schema extends S.Schema.AnyNoContext, ProvidedRuntimeServices, T
     : never
 
 export type HandlerConfig<InternalServerError, InvalidPayloadError, ProvidedServices> = {
-  /* makeInvalidPayloadError: (schema: S.Schema.AnyNoContext, payload: S.Schema.Type<S.Schema.AnyNoContext>) => InvalidPayloadError
-  makeInternalServerError: (cause: Cause.Cause<unknown>) => InternalServerError */
-  errors?: {
+  /* errors?: {
     invalidPayload?: (schema: S.Schema.AnyNoContext, payload: S.Schema.Type<S.Schema.AnyNoContext>) => InvalidPayloadError
     unexpected?: (cause: Cause.Cause<unknown>) => InternalServerError
-  }
+  } */
   layer?: Layer.Layer<ProvidedServices, never, RequestContext>
 }
 
@@ -40,7 +38,7 @@ export const makeServerActionHandler = <InternalServerError, InvalidPayloadError
     const mergedContext = Layer.mergeAll(config.layer, Next.Default)
     return async function (payload: S.Schema.Type<Schema>): Promise<InferSuccess<Schema, ProvidedServices, TEffectFn> | InferError<Schema, ProvidedServices, TEffectFn> | InternalServerError | InvalidPayloadError> {
       const validatedPayload = S.decodeUnknownEither(schema)(payload).pipe(
-        Either.mapLeft(() => config.errors?.invalidPayload?.(schema, payload) ?? invalidPayload)
+        Either.mapLeft(() => invalidPayload)
       )
       if (Either.isLeft(validatedPayload)) return validatedPayload.left
 
@@ -66,8 +64,8 @@ export const makeServerActionHandler = <InternalServerError, InvalidPayloadError
       if (Cause.isFailType(responseExit.cause)) {
         return responseExit.cause.error as InferError<Schema, ProvidedServices, TEffectFn>;
       }
-  
-      return config.makeInternalServerError(responseExit.cause)
+
+      return new InternalServerError({ success: false, message: 'Internal Server Error', reason: 'internal-server-error' })
     }
   }
 }
