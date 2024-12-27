@@ -28,7 +28,7 @@ export type FormHandlerConfig<State extends S.Schema.AnyNoContext, FormFields ex
     invalidFormData: (errors: DeriveFormErrors<FormFields>, schema: FormFields, rawPayload: FormData) => FormState<State, FormFields>
     unexpected: (cause: Cause.Cause<unknown>) => FormState<State, FormFields>
   }
-} & HandlerConfig<InternalServerError, ProvidedServices, InvalidPayloadError>
+} & Omit<HandlerConfig<InternalServerError, ProvidedServices, InvalidPayloadError>, 'errors'>
 
 export const makeFormHandler = <State extends S.Schema.AnyNoContext, FormFields extends S.Schema.AnyNoContext, InternalServerError, InvalidPayloadError, ProvidedServices>(config: FormHandlerConfig<State, FormFields, InternalServerError, InvalidPayloadError, ProvidedServices>) => {
   const mergedContext = Layer.mergeAll(config.layer ?? Layer.empty, Next.Default)
