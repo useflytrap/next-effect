@@ -1,33 +1,31 @@
 import { Schema as S, Effect, Layer, ParseResult, Exit, Cause } from "effect"
 import { HandlerConfig } from "./server-action.ts";
-import { InternalServerError, Next } from "./next-service.ts";
+import { Next } from "./next-service.ts";
 import { RequestContext } from "./request-context.ts";
 
-export const validateFormData = <FormFields extends S.Schema.AnyNoContext>(schema: FormFields, formData: FormData): Effect.Effect<S.Schema.Type<FormFields>, DeriveError<FormFields>> => S.decodeUnknown(schema, { errors: 'all' })(Object.fromEntries(formData.entries())).pipe(
+export const validateFormData = <FormFields extends S.Schema.AnyNoContext>(schema: FormFields, formData: FormData): Effect.Effect<S.Schema.Type<FormFields>, DeriveFormErrors<FormFields>> => S.decodeUnknown(schema, { errors: 'all' })(Object.fromEntries(formData.entries())).pipe(
   Effect.mapError(e => {
     const issues = ParseResult.ArrayFormatter.formatErrorSync(e)
     const errors: Record<string, string> = {}
     for (const issue of issues) {
       errors[String(issue.path[0])] = issue.message
     }
-    return { errors } as DeriveError<FormFields>
+    return errors as DeriveFormErrors<FormFields>
   })
 )
 
-export type DeriveError<FormFields extends S.Schema.AnyNoContext> = {
-  errors?: {
-    [K in keyof S.Schema.Type<FormFields>]: string
-  }
+export type DeriveFormErrors<FormFields extends S.Schema.AnyNoContext> = {
+  [K in keyof S.Schema.Type<FormFields>]: string
 }
 
-export type FormState<State extends S.Schema.AnyNoContext, FormFields extends S.Schema.AnyNoContext> = S.Schema.Type<State> & DeriveError<FormFields>
+export type FormState<State extends S.Schema.AnyNoContext, FormFields extends S.Schema.AnyNoContext> = S.Schema.Type<State> & { errors?: DeriveFormErrors<FormFields> }
 
 export type FormHandlerConfig<State extends S.Schema.AnyNoContext, FormFields extends S.Schema.AnyNoContext, InternalServerError, InvalidPayloadError, ProvidedServices> = {
   state: State
   fields: FormFields,
   action: (prevState: FormState<State, FormFields>, formFields: S.Schema.Type<FormFields>) => Promise<Effect.Effect<FormState<State, FormFields>, FormState<State, FormFields>, ProvidedServices | Next>>
   errors: {
-    invalidFormData: (errors: DeriveError<FormFields>, schema: FormFields, rawPayload: FormData) => FormState<State, FormFields>
+    invalidFormData: (errors: DeriveFormErrors<FormFields>, schema: FormFields, rawPayload: FormData) => FormState<State, FormFields>
     unexpected: (cause: Cause.Cause<unknown>) => FormState<State, FormFields>
   }
 } & HandlerConfig<InternalServerError, ProvidedServices, InvalidPayloadError>

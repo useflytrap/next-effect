@@ -136,7 +136,7 @@ Deno.test("server actions > forms > errors", async () => {
     fields: ApiKeyFormSchema,
     action: createApiKeySuccess,
     errors: {
-      invalidFormData: (errors) => ({ success: false, message: "Invalid payload", errors: errors.errors }),
+      invalidFormData: (errors) => ({ success: false, message: "Invalid payload", errors }),
       unexpected: () => ApiKeyState.make({ success: false, message: "Internal server error" })
     }
   })
@@ -158,7 +158,7 @@ Deno.test("server actions > forms > errors", async () => {
     fields: ApiKeyFormSchema,
     action: createApiKeyDefect,
     errors: {
-      invalidFormData: (errors) => ({ success: false, message: "Invalid payload", errors: errors.errors }),
+      invalidFormData: (errors) => ({ success: false, message: "Invalid payload", errors }),
       unexpected: () => ApiKeyState.make({ success: false, message: "Internal server error" })
     }
   })
