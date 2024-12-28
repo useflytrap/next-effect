@@ -37,12 +37,12 @@ export const makeRouteHandler = <InternalServerError, InvalidPayloadError, Provi
       }
 
       if (Cause.isFailType(responseExit.cause)) {
-        const matchingResponseSchema = Array.findFirst(config.responses, (schema) => S.is(schema)(responseExit.value)).pipe(
+        const matchingResponseSchema = Array.findFirst(config.responses, (schema) => S.is(schema)((responseExit.cause as Cause.Fail<unknown>).error)).pipe(
           Option.getOrUndefined,
         )
         const statusCode = matchingResponseSchema ? getStatus(matchingResponseSchema.ast) : 400
         const encoding = matchingResponseSchema ? getEncoding(matchingResponseSchema.ast) : encodingJson
-        return new NextResponse(encoding.kind === "Json" ? JSON.stringify(responseExit.value) : responseExit.value as BodyInit, { status: statusCode, headers: { "Content-Type": encoding.contentType } })
+        return new NextResponse(encoding.kind === "Json" ? JSON.stringify(responseExit.cause.error) : responseExit.cause.error as BodyInit, { status: statusCode, headers: { "Content-Type": encoding.contentType } })
       }
 
       // @ts-expect-error: types are correct

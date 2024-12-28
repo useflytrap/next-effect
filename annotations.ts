@@ -1,12 +1,10 @@
-// @ts-nocheck
-
 /**
  * We don't want to force people to use the @effect/platform, so we re-define the same annotations here.
  * @source https://github.com/effect-ts/effect/blob/main/packages/platform/src/HttpApiSchema.ts
  */
 
 import * as AST from "effect/SchemaAST"
-import { Option, Schema as S } from "effect";
+import * as S from "effect/Schema"
 
 export type Encoding = {
   readonly kind: "Json" | "Uint8Array" | "Text"
@@ -16,6 +14,16 @@ export type Encoding = {
 export const encodingJson: Encoding = {
   kind: "Json",
   contentType: "application/json"
+}
+
+export const encodingText: Encoding = {
+  kind: "Text",
+  contentType: "text/plain"
+}
+
+export const encodingBytes: Encoding = {
+  kind: "Uint8Array",
+  contentType: "application/octet-stream"
 }
 
 export const AnnotationEncoding: unique symbol = Symbol.for("neft-effect/AnnotationEncoding")
@@ -33,12 +41,13 @@ export const getResponseAnnotation = <A>(ast: AST.AST, key: symbol): A | undefin
 export const getStatus = (ast: AST.AST): number => getResponseAnnotation(ast, AnnotationStatus) ?? 200
 export const getEncoding = (ast: AST.AST): Encoding => getResponseAnnotation(ast, AnnotationEncoding) ?? encodingJson
 
-export const annotations = <A>(
+export const addResponseAnnotations = <A>(
   annotations: S.Annotations.Schema<NoInfer<A>> & {
     readonly status?: number | undefined
     readonly encoding?: Encoding | undefined
   }
 ): S.Annotations.Schema<A> => {
+  // @ts-expect-error: dont know how to fix this
   const result: Record<symbol, unknown> = S.omit(annotations, "status", "encoding")
   if (annotations.status !== undefined) {
     result[AnnotationStatus] = annotations.status

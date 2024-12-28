@@ -1,73 +1,13 @@
 import { assertEquals } from "@std/assert";
 import { Effect, Schema as S } from "effect"
 
-import { InternalServerError, InvalidPayload } from "./fixtures.ts";
+import { BytesResponse, InternalServerError, InvalidPayload, TestSuccess, TextResponse, Unauthorized } from "./fixtures.ts";
 import { makeRouteHandler } from "../route-handler.ts";
 import { NextRequest } from "next/server.js";
 import { Next } from "../next-service.ts";
-import { AnnotationEncoding, AnnotationStatus, annotations, getResponseAnnotation, getStatus } from "../annotations.ts";
 
 const invalidPayload = new InvalidPayload({ success: false, message: "Invalid payload", reason: 'invalid-payload' })
 const internalServerError = new InternalServerError({ success: false, message: "Internal server error", reason: 'internal-server-error' })
-
-class Unauthorized extends S.TaggedError<Unauthorized>()(
-  "Unauthorized",
-  {
-    message: S.String,
-  },
-  annotations({ status: 401 })
-) {}
-
-class TestSuccess extends S.TaggedClass<TestSuccess>()(
-  "TestSuccess",
-  {
-    success: S.Literal(true),
-    message: S.String,
-  },
-  annotations({ status: 201 })
-) {}
-
-import * as AST from "effect/SchemaAST"
-
-const TextResponse = S.String.pipe(
-  S.annotations({ [AnnotationStatus]: 200, [AnnotationEncoding]: { kind: 'Text', contentType: 'text/plain' } })
-)
-
-const BytesResponse = S.Uint8ArrayFromSelf.pipe(
-  S.annotations({ [AnnotationStatus]: 200, [AnnotationEncoding]: { kind: 'Bytes', contentType: 'application/octet-stream' } })
-)
-
-/*
-
-type BodyInit =
-  | Blob
-  | BufferSource
-  | FormData
-  | URLSearchParams
-  | ReadableStream<Uint8Array>
-  | Iterable<Uint8Array>
-  | AsyncIterable<Uint8Array>
-  | string;
-
-*/
-
-
-
-/*
-
-export const annotations = <A>(
-  annotations: Schema.Annotations.Schema<NoInfer<A>> & {
-    readonly status?: number | undefined
-  }
-): Schema.Annotations.Schema<A> => {
-  const result: Record<symbol, unknown> = Struct.omit(annotations, "status")
-  if (annotations.status !== undefined) {
-    result[AnnotationStatus] = annotations.status
-  }
-  return result
-}
-
-*/
 
 const testRouteHandler = makeRouteHandler({
   errors: {
