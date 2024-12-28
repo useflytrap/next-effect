@@ -4,3 +4,4 @@
   - Easily add context to traces
   - Maybe some auth?
 - Way to define response types / errors
+- Schemas to define response types (raw, text), status codes

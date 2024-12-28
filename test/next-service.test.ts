@@ -36,7 +36,7 @@ Deno.test("next service > errors > replace with payload error (TODO)", async () 
   assertEquals(result, internalServerError)
 })
 
-Deno.test.only("next service > ensureRequestSchema", async () => {
+Deno.test("next service > ensureRequestSchema", async () => {
   const GET = testRouteHandler(Effect.gen(function*() {
     yield* Effect.sleep("2 seconds")
     const name = yield* Next.ensureRequestSchema(S.Struct({ name: S.String }))
