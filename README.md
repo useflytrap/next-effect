@@ -15,7 +15,9 @@
 
 > Easily use Effect for Next.js Route Handlers, Server Actions, Pages and Forms
 
-Next Effect is a library that makes it easy to use Effect for Next.js Route Handlers, Server Actions, Pages and Forms. It provides helpful utilities for working with Next.js using Effect.
+Next Effect is a library that makes it easy to use Effect for Next.js Route
+Handlers, Server Actions, Pages and Forms. It provides helpful utilities for
+working with Next.js using Effect.
 
 ## Features
 
@@ -28,6 +30,7 @@ Next Effect is a library that makes it easy to use Effect for Next.js Route Hand
 ## ⚡️ Quickstart
 
 1. Install the Neft Effect package
+
 ```sh
 $ pnpx jsr add next-effect
 ```
@@ -168,7 +171,7 @@ Published under [MIT License](./LICENSE).
 - [ ] Request tracing
   - [ ] Easily add context to traces
 - [ ] Way to define response types / errors
-- [X] Schemas to define response types (raw, text), status codes
+- [x] Schemas to define response types (raw, text), status codes
 
 <!-- Links -->
 

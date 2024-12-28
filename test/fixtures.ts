@@ -1,36 +1,51 @@
-import { Effect, Schema as S } from "effect"
-import { addResponseAnnotations, encodingText, encodingBytes } from "../annotations.ts";
+import { Effect, Schema as S } from "effect";
+import {
+  addResponseAnnotations,
+  encodingBytes,
+  encodingText,
+} from "../annotations.ts";
 
-export class InternalServerError extends S.TaggedError<InternalServerError>()("InternalServerError", {
-  success: S.Boolean,
-  message: S.String,
-  reason: S.String,
-}) {}
+export class InternalServerError
+  extends S.TaggedError<InternalServerError>()("InternalServerError", {
+    success: S.Boolean,
+    message: S.String,
+    reason: S.String,
+  }) {}
 
-export class InvalidPayload extends S.TaggedError<InvalidPayload>()("InvalidPayload", {
-  success: S.Boolean,
-  message: S.String,
-  reason: S.String,
-}) {}
+export class InvalidPayload
+  extends S.TaggedError<InvalidPayload>()("InvalidPayload", {
+    success: S.Boolean,
+    message: S.String,
+    reason: S.String,
+  }) {}
 
-export const invalidPayload = new InvalidPayload({ success: false, message: "Invalid payload", reason: 'invalid-payload' })
-export const internalServerError = new InternalServerError({ success: false, message: "Internal server error", reason: 'internal-server-error' })
+export const invalidPayload = new InvalidPayload({
+  success: false,
+  message: "Invalid payload",
+  reason: "invalid-payload",
+});
+export const internalServerError = new InternalServerError({
+  success: false,
+  message: "Internal server error",
+  reason: "internal-server-error",
+});
 
-export class MockService extends Effect.Service<MockService>()("next-effect/test/MockService", {
-  sync: () => {
-    return {
-      foo: 'bar'
-    } as const;
-  },
-  accessors: true,
-}) {}
+export class MockService
+  extends Effect.Service<MockService>()("next-effect/test/MockService", {
+    sync: () => {
+      return {
+        foo: "bar",
+      } as const;
+    },
+    accessors: true,
+  }) {}
 
 export class Unauthorized extends S.TaggedError<Unauthorized>()(
   "Unauthorized",
   {
     message: S.String,
   },
-  addResponseAnnotations({ status: 401 })
+  addResponseAnnotations({ status: 401 }),
 ) {}
 
 export class TestSuccess extends S.TaggedClass<TestSuccess>()(
@@ -39,13 +54,17 @@ export class TestSuccess extends S.TaggedClass<TestSuccess>()(
     success: S.Literal(true),
     message: S.String,
   },
-  addResponseAnnotations({ status: 201 })
+  addResponseAnnotations({ status: 201 }),
 ) {}
 
 export const TextResponse = S.String.pipe(
-  S.annotations(addResponseAnnotations({ status: 200, encoding: encodingText }))
-)
+  S.annotations(
+    addResponseAnnotations({ status: 200, encoding: encodingText }),
+  ),
+);
 
 export const BytesResponse = S.Uint8ArrayFromSelf.pipe(
-  S.annotations(addResponseAnnotations({ status: 200, encoding: encodingBytes }))
-)
+  S.annotations(
+    addResponseAnnotations({ status: 200, encoding: encodingBytes }),
+  ),
+);
