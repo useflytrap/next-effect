@@ -14,8 +14,7 @@ const testActionHandler = makeServerActionHandler({
 })
 
 Deno.test("server actions > invalid payload", async () => {
-  const handler = testActionHandler(S.String, async (name) => Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
+  const handler = testActionHandler(S.String, async (name) => Effect.sync(() => {
     return { success: true, message: `API key created for ${name}.` }
   }))
 
@@ -26,8 +25,7 @@ Deno.test("server actions > invalid payload", async () => {
 
 
 Deno.test("server actions > internal server error", async () => {
-  const handler = testActionHandler(S.String, async (name) => Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
+  const handler = testActionHandler(S.String, async (name) => Effect.sync(() => {
     throw new Error("Oops! An unexpected error occurred.")
   }))
 

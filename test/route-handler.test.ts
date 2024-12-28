@@ -15,8 +15,7 @@ const testRouteHandler = makeRouteHandler({
 })
 
 Deno.test("route handler > success", async () => {
-  const GET = testRouteHandler(Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
+  const GET = testRouteHandler(Effect.sync(() => {
     return { success: true, message: `API key created for ${name}.` }
   }))
 
@@ -26,7 +25,6 @@ Deno.test("route handler > success", async () => {
 
 Deno.test("route handler > errors > invalid payload", async () => {
   const GET = testRouteHandler(Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
     const name = yield* Next.ensureRequestSchema(S.Struct({ name: S.String }))
     return { success: true, message: `API key created for ${name.name}.` }
   }))
@@ -42,8 +40,7 @@ Deno.test("route handler > errors > invalid payload", async () => {
 })
 
 Deno.test("route handler > errors > unexpected", async () => {
-  const GET = testRouteHandler(Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
+  const GET = testRouteHandler(Effect.sync(() => {
     throw new Error("Oops! An unexpected error occurred.")
   }))
 
@@ -58,10 +55,7 @@ Deno.test("route handler > errors > unexpected", async () => {
 })
 
 Deno.test("route handler > responses > json", async () => {
-  const GET = testRouteHandler(Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
-    return new TestSuccess({ success: true, message: `API key created successfully.` })
-  }))
+  const GET = testRouteHandler(Effect.sync(() => new TestSuccess({ success: true, message: `API key created successfully.` })))
 
   const result = await GET(new NextRequest("https://www.example.com"))
   assertEquals(result.status, 201)
@@ -70,10 +64,7 @@ Deno.test("route handler > responses > json", async () => {
 })
 
 Deno.test("route handler > responses > text", async () => {
-  const textGET = testRouteHandler(Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
-    return "Hello, world!"
-  }))
+  const textGET = testRouteHandler(Effect.sync(() => "Hello, world!"))
 
   const textResult = await textGET(new NextRequest("https://www.example.com"))
   assertEquals(textResult.status, 200)
@@ -82,10 +73,7 @@ Deno.test("route handler > responses > text", async () => {
 })
 
 Deno.test("route handler > responses > bytes", async () => {
-  const bytesGET = testRouteHandler(Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
-    return new Uint8Array([1, 2, 3])
-  }))
+  const bytesGET = testRouteHandler(Effect.sync(() => new Uint8Array([1, 2, 3])))
 
   const bytesResult = await bytesGET(new NextRequest("https://www.example.com"))
   assertEquals(bytesResult.status, 200)

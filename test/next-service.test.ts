@@ -25,7 +25,6 @@ Deno.test("next service > errors > replace with internal server error", async ()
   const handler = testActionHandler(S.String, async (name) => Effect.gen(function*() {
     const cookies = yield* Next.getCookieJar
     yield* Effect.log(cookies)
-    yield* Effect.sleep("2 seconds")
     return { success: true, message: `API key created for ${name}.` }
   }))
 
@@ -34,8 +33,7 @@ Deno.test("next service > errors > replace with internal server error", async ()
 })
 
 Deno.test("next service > errors > replace with payload error (TODO)", async () => {
-  const handler = testActionHandler(S.String, async (name) => Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
+  const handler = testActionHandler(S.String, async (name) => Effect.sync(() => {
     throw new Error("Oops! An unexpected error occurred.")
   }))
 
@@ -45,7 +43,6 @@ Deno.test("next service > errors > replace with payload error (TODO)", async () 
 
 Deno.test("next service > ensureRequestSchema", async () => {
   const GET = testRouteHandler(Effect.gen(function*() {
-    yield* Effect.sleep("2 seconds")
     const name = yield* Next.ensureRequestSchema(S.Struct({ name: S.String }))
     return { success: true, message: `API key created for ${name.name}.` }
   }))

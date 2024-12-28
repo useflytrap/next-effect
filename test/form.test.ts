@@ -12,16 +12,14 @@ const ApiKeyFormSchema = S.Struct({
   name: S.String.pipe(S.minLength(5, { message: () => "Name must be at least 5 characters long" })),
 })
 
-const createApiKeySuccess = async (_prevState: any, formFields: any) => Effect.gen(function*() {
-  yield* Effect.sleep("2 seconds")
+const createApiKeySuccess = async (_prevState: any, formFields: any) => Effect.sync(() => {
   return {
     success: true,
     message: `API key created for ${formFields.name}.`,
   }
 })
 
-const createApiKeyDefect = async (_prevState: any, _formFields: any) => Effect.gen(function*() {
-  yield* Effect.sleep("2 seconds")
+const createApiKeyDefect = async (_prevState: any, _formFields: any) => Effect.sync(() => {
   throw new Error("Oops! An unexpected error occurred.")
 })
 
@@ -95,7 +93,6 @@ Deno.test("server actions > forms > custom layer", async () => {
     fields: ApiKeyFormSchema,
     action: async (prevState, formFields) => Effect.gen(function*() {
       const { foo } = yield* MockService
-      yield* Effect.sleep("2 seconds")
       return {
         success: true,
         message: `API key created for ${formFields.name}. ${foo}`,
