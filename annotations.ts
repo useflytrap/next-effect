@@ -3,7 +3,7 @@
  * @source https://github.com/effect-ts/effect/blob/main/packages/platform/src/HttpApiSchema.ts
  */
 
-import * as AST from "effect/SchemaAST"
+import type { AST } from "effect/SchemaAST"
 import * as S from "effect/Schema"
 
 export type Encoding = {
@@ -29,7 +29,7 @@ export const encodingBytes: Encoding = {
 export const AnnotationEncoding: unique symbol = Symbol.for("neft-effect/AnnotationEncoding")
 export const AnnotationStatus: unique symbol = Symbol.for("next-effect/AnnotationStatus")
 
-const mergedAnnotations = (ast: AST.AST): Record<symbol, unknown> =>
+const mergedAnnotations = (ast: AST): Record<symbol, unknown> =>
   ast._tag === "Transformation" ?
     {
       ...ast.to.annotations,
@@ -37,9 +37,9 @@ const mergedAnnotations = (ast: AST.AST): Record<symbol, unknown> =>
     } :
     ast.annotations
 
-export const getResponseAnnotation = <A>(ast: AST.AST, key: symbol): A | undefined => mergedAnnotations(ast)[key] as A
-export const getStatus = (ast: AST.AST): number => getResponseAnnotation(ast, AnnotationStatus) ?? 200
-export const getEncoding = (ast: AST.AST): Encoding => getResponseAnnotation(ast, AnnotationEncoding) ?? encodingJson
+export const getResponseAnnotation = <A>(ast: AST, key: symbol): A | undefined => mergedAnnotations(ast)[key] as A
+export const getStatus = (ast: AST): number => getResponseAnnotation(ast, AnnotationStatus) ?? 200
+export const getEncoding = (ast: AST): Encoding => getResponseAnnotation(ast, AnnotationEncoding) ?? encodingJson
 
 export const addResponseAnnotations = <A>(
   annotations: S.Annotations.Schema<NoInfer<A>> & {
