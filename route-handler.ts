@@ -37,13 +37,13 @@ export const makeRouteHandler = <
     return async (request: NextRequest): Promise<NextResponse<A | E>> => {
       // @ts-expect-error: types are correct
       const responseExit = await Effect.runPromiseExit(effect.pipe(
-        // @ts-expect-error: this can be thrown by Next service, so we need to catch it
         Effect.catchTag(
+          // @ts-expect-error: this can be thrown by Next service, so we need to catch it
           "NextUnexpectedError",
-          (error) => Effect.fail(config.errors.unexpected(error.cause)),
+          (error) => Effect.fail(config.errors.unexpected(Cause.fail(error))),
         ),
-        // @ts-expect-error: this can be thrown by Next service, so we need to catch it
         Effect.catchTag(
+          // @ts-expect-error: this can be thrown by Next service, so we need to catch it
           "NextPayloadError",
           (payload) => Effect.fail(config.errors.invalidPayload(payload)),
         ),

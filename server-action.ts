@@ -90,13 +90,13 @@ export const makeServerActionHandler = <
       const responseExit = await Effect.runPromiseExit(
         // @ts-expect-error: this is correct
         effect.pipe(
-          // @ts-expect-error: this can be thrown by Next service, so we need to catch it
           Effect.catchTag(
+            // @ts-expect-error: this can be thrown by Next service, so we need to catch it
             "NextUnexpectedError",
-            (error) => Effect.fail(config.errors.unexpected(error.cause)),
+            (error) => Effect.fail(config.errors.unexpected(Cause.fail(error))),
           ),
-          // @ts-expect-error: this can be thrown by Next service, so we need to catch it
           Effect.catchTag(
+            // @ts-expect-error: this can be thrown by Next service, so we need to catch it
             "NextPayloadError",
             (payload) => Effect.fail(config.errors.invalidPayload(payload)),
           ),

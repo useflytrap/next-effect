@@ -58,6 +58,7 @@ export const addResponseAnnotations = <A>(
 ): S.Annotations.Schema<A> => {
   // @ts-expect-error: dont know how to fix this
   const result: Record<symbol, unknown> = S.omit(
+    // @ts-expect-error: dont know how to fix this
     annotations,
     "status",
     "encoding",

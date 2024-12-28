@@ -104,7 +104,7 @@ export const makeFormHandler = <
       return yield* effectFn.pipe(
         Effect.catchTag(
           "NextUnexpectedError",
-          (error) => Effect.fail(config.errors.unexpected(error.cause)),
+          (error) => Effect.fail(config.errors.unexpected(Cause.fail(error))),
         ),
       );
     }).pipe(
