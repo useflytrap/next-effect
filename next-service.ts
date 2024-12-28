@@ -1,5 +1,5 @@
 import { Cause, Effect, Schema as S } from "effect";
-import { cookies } from "next/headers.js";
+import { cookies, headers } from "next/headers.js";
 import { notFound, redirect, type RedirectType } from "next/navigation.js";
 import { revalidatePath, revalidateTag } from "next/cache.js";
 import { RequestContext } from "./request-context.ts";
@@ -33,6 +33,17 @@ export class Next extends Effect.Service<Next>()("next-effect/Next", {
         new NextUnexpectedError({ cause: Cause.fail(error) })
       ),
       Effect.withSpan("Next.getCookieJar"),
+    );
+
+    const getHeaders = Effect.tryPromise({
+      try: () => headers(),
+      catch: (error) => error,
+    }).pipe(
+      Effect.tapErrorCause((cause) => Effect.logError(Cause.pretty(cause))),
+      Effect.mapError((error) =>
+        new NextUnexpectedError({ cause: Cause.fail(error) })
+      ),
+      Effect.withSpan("Next.getHeaders"),
     );
 
     const redirectTo = (url: string, type?: RedirectType) =>
@@ -164,6 +175,7 @@ export class Next extends Effect.Service<Next>()("next-effect/Next", {
       failNotFound,
       text,
       arrayBuffer,
+      getHeaders,
     };
   },
   accessors: true,

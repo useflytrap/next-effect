@@ -172,6 +172,7 @@ Published under [MIT License](./LICENSE).
   - [ ] Easily add context to traces
 - [ ] Way to define response types / errors
 - [x] Schemas to define response types (raw, text), status codes
+- [x] Headers
 
 <!-- Links -->
 
