@@ -2,16 +2,23 @@ import { assertEquals } from "@std/assert";
 import { Effect, Schema as S } from "effect"
 import { makeServerActionHandler } from "../server-action.ts";
 import { Next } from "../next-service.ts";
-import { InternalServerError, InvalidPayload } from "./fixtures.ts";
-
-const invalidPayload = new InvalidPayload({ success: false, message: "Invalid payload", reason: 'invalid-payload' })
-const internalServerError = new InternalServerError({ success: false, message: "Internal server error", reason: 'internal-server-error' })
+import { internalServerError, invalidPayload } from "./fixtures.ts";
+import { makeRouteHandler } from "../route-handler.ts";
+import { NextRequest } from "next/server.js";
 
 const testActionHandler = makeServerActionHandler({
   errors: {
     invalidPayload: () => invalidPayload,
     unexpected: () => internalServerError
   }
+})
+
+const testRouteHandler = makeRouteHandler({
+  errors: {
+    invalidPayload: () => invalidPayload,
+    unexpected: () => internalServerError
+  },
+  responses: []
 })
 
 Deno.test("next service > errors > replace with internal server error", async () => {
@@ -43,6 +50,11 @@ Deno.test("next service > ensureRequestSchema", async () => {
     return { success: true, message: `API key created for ${name.name}.` }
   }))
 
-  const result = await GET(new NextRequest("https://www.useflytrap.com"))
-  assertEquals(await result.json(), { success: true, message: `API key created for ${name}.` })
+  const result = await GET(new NextRequest("https://www.example.com"))
+  assertEquals(await result.json(), {
+    _tag: "InvalidPayload",
+    message: "Invalid payload",
+    reason: "invalid-payload",
+    success: false
+  })
 })

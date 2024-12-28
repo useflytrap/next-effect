@@ -13,6 +13,9 @@ export class InvalidPayload extends S.TaggedError<InvalidPayload>()("InvalidPayl
   reason: S.String,
 }) {}
 
+export const invalidPayload = new InvalidPayload({ success: false, message: "Invalid payload", reason: 'invalid-payload' })
+export const internalServerError = new InternalServerError({ success: false, message: "Internal server error", reason: 'internal-server-error' })
+
 export class MockService extends Effect.Service<MockService>()("next-effect/test/MockService", {
   sync: () => {
     return {

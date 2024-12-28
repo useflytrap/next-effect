@@ -1,13 +1,10 @@
 import { assertEquals } from "@std/assert";
 import { Effect, Schema as S } from "effect"
 
-import { BytesResponse, InternalServerError, InvalidPayload, TestSuccess, TextResponse, Unauthorized } from "./fixtures.ts";
+import { BytesResponse, internalServerError, invalidPayload, TestSuccess, TextResponse, Unauthorized } from "./fixtures.ts";
 import { makeRouteHandler } from "../route-handler.ts";
 import { NextRequest } from "next/server.js";
 import { Next } from "../next-service.ts";
-
-const invalidPayload = new InvalidPayload({ success: false, message: "Invalid payload", reason: 'invalid-payload' })
-const internalServerError = new InternalServerError({ success: false, message: "Internal server error", reason: 'internal-server-error' })
 
 const testRouteHandler = makeRouteHandler({
   errors: {
