@@ -36,7 +36,7 @@ export const makeFormHandler = <State extends S.Schema.AnyNoContext, FormFields 
     const requestContext = RequestContext.of({
       rawRequest: formData,
       type: 'server-action',
-      requestId: crypto.randomUUID()
+      requestId: config.generateRequestId?.() ?? crypto.randomUUID()
     })
 
     const effect = Effect.gen(function*() {

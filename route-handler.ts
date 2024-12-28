@@ -23,7 +23,7 @@ export const makeRouteHandler = <InternalServerError, InvalidPayloadError, Provi
         Effect.provideService(RequestContext, RequestContext.of({
           rawRequest: request,
           type: 'route-handler',
-          requestId: 'acbd1234',
+          requestId: config.generateRequestId?.() ?? crypto.randomUUID(),
         }))
       ))
 
