@@ -50,6 +50,10 @@ export const makeServerActionHandler = <InternalServerError, InvalidPayloadError
       const responseExit = await Effect.runPromiseExit(
         // @ts-expect-error: this is correct
         effect.pipe(
+          // @ts-expect-error: this can be thrown by Next service, so we need to catch it
+          Effect.catchTag("NextUnexpectedError", (error) => Effect.fail(config.errors.unexpected(error.cause))),
+          // @ts-expect-error: this can be thrown by Next service, so we need to catch it
+          Effect.catchTag("NextPayloadError", (payload) => Effect.fail(config.errors.invalidPayload(payload))),
           Effect.provide(mergedContext),
           Effect.provideService(
             RequestContext,
