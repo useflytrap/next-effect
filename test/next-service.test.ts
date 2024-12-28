@@ -35,3 +35,14 @@ Deno.test("next service > errors > replace with payload error (TODO)", async () 
   const result = await handler('John')
   assertEquals(result, internalServerError)
 })
+
+Deno.test.only("next service > ensureRequestSchema", async () => {
+  const GET = testRouteHandler(Effect.gen(function*() {
+    yield* Effect.sleep("2 seconds")
+    const name = yield* Next.ensureRequestSchema(S.Struct({ name: S.String }))
+    return { success: true, message: `API key created for ${name.name}.` }
+  }))
+
+  const result = await GET(new NextRequest("https://www.useflytrap.com"))
+  assertEquals(await result.json(), { success: true, message: `API key created for ${name}.` })
+})

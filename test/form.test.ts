@@ -1,6 +1,7 @@
 import { assertEquals } from "@std/assert";
 import { Effect, Exit, Layer, Schema as S } from "effect"
 import { makeFormHandler, validateFormData } from "../server-action-form.ts";
+import { MockService } from "./fixtures.ts";
 
 const ApiKeyState = S.Struct({
   success: S.Boolean,
@@ -85,15 +86,6 @@ Deno.test("server actions > forms", async () => {
     message: `API key created for John Doe.`,
   })
 })
-
-export class MockService extends Effect.Service<MockService>()("next-effect/test/MockService", {
-  sync: () => {
-    return {
-      foo: 'bar'
-    } as const;
-  },
-  accessors: true,
-}) {}
 
 Deno.test("server actions > forms > custom layer", async () => {
   const mockFormData = new FormData()

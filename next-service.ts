@@ -112,4 +112,7 @@ export class Next extends Effect.Service<Next>()("next-effect/Next", {
     };
   },
   accessors: true,
-}) {}
+}) {
+  // @ts-expect-error: can't use override modifier
+  static ensureRequestSchema = Effect.serviceFunctionEffect(this, _ => _.ensureRequestSchema)
+}

@@ -1,14 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server.js";
 import { HandlerConfig } from "./server-action.ts";
 import { Cause, Effect, Exit, Layer } from "effect";
 import { Next } from "./next-service.ts";
 import { RequestContext } from "./request-context.ts";
 
 export const makeRouteHandler = <InternalServerError, ProvidedServices, InvalidPayloadError>(config: HandlerConfig<InternalServerError, InvalidPayloadError, ProvidedServices>) => {
-  const mergedContext = Layer.mergeAll(config.layer, Next.Default)
+  const mergedContext = Layer.mergeAll(config.layer ?? Layer.empty, Next.Default)
   return <A, E>(effect: Effect.Effect<A, E, ProvidedServices>) => {
     return async (request: NextRequest): Promise<NextResponse<A | E>> => {
+      // @ts-expect-error: types are correct
       const responseExit = await Effect.runPromiseExit(effect.pipe(
+        // @ts-expect-error: this can be thrown by Next service, so we need to catch it
+        Effect.catchTag("NextUnexpectedError", (error) => Effect.fail(config.errors.unexpected(error.cause))),
+        // @ts-expect-error: this can be thrown by Next service, so we need to catch it
+        Effect.catchTag("NextPayloadError", (payload) => Effect.fail(config.errors.invalidPayload(payload))),
         Effect.provide(mergedContext),
         Effect.provideService(RequestContext, RequestContext.of({
           rawRequest: request,
@@ -18,6 +23,7 @@ export const makeRouteHandler = <InternalServerError, ProvidedServices, InvalidP
       ))
 
       if (Exit.isSuccess(responseExit)) {
+        // @ts-expect-error: types are correct
         return NextResponse.json(responseExit.value)
       }
 
@@ -31,15 +37,3 @@ export const makeRouteHandler = <InternalServerError, ProvidedServices, InvalidP
     }
   }
 }
-
-/* const routeHandler = makeRouteHandler({
-  layer: Layer.empty,
-  makeInvalidPayload: (schema, payload) => new InvalidPayload({ success: false, message: "Invalid payload", reason: "Invalid payload" }),
-  makeInternalServerError: (schema, cause) => new InternalServerError({ success: false, message: "Internal server error", reason: "Internal server error" }),
-})
-
-const GET = routeHandler(Effect.gen(function* () {
-  return {
-    hello: 'world'
-  }
-})) */ 
