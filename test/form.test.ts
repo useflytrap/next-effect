@@ -1,7 +1,8 @@
 import { assertEquals } from "@std/assert";
 import { Effect, Exit, Layer, Schema as S } from "effect"
 import { makeFormHandler, validateFormData } from "../server-action-form.ts";
-import { MockService } from "./fixtures.ts";
+import { internalServerError, invalidPayload, MockService } from "./fixtures.ts";
+import { Next } from "../next-service.ts";
 
 const ApiKeyState = S.Struct({
   success: S.Boolean,
@@ -110,5 +111,36 @@ Deno.test("server actions > forms > custom layer", async () => {
   assertEquals(result, {
     success: true,
     message: `API key created for John Doe. bar`,
+  })
+})
+
+Deno.test("server actions > forms > can use next service", async () => {
+  const mockFormData = new FormData()
+  mockFormData.set("name", "John Doe")
+
+  const createApiKeyForm = makeFormHandler({
+    state: S.Struct({
+      success: S.Boolean,
+      message: S.String,
+    }),
+    fields: S.Struct({ name: S.String }),
+    action: async (prevState, formFields) => Effect.gen(function*() {
+      const _headers = yield* Next.getCookieJar
+      return {
+        success: true,
+        message: "API key created successfully.",
+      }
+    }),
+    errors: {
+      invalidFormData: () => ({ success: false, message: "Invalid payload" }),
+      unexpected: () => ({ success: false, message: "Internal server error" }),
+    },
+  })
+
+  const result = await createApiKeyForm({ success: false, message: "" }, mockFormData)
+
+  assertEquals(result, {
+    success: false,
+    message: "Internal server error",
   })
 })

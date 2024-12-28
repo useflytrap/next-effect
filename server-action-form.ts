@@ -1,6 +1,6 @@
 import { Schema as S, Effect, Layer, ParseResult, Exit, Cause } from "effect"
-import { HandlerConfig } from "./server-action.ts";
-import { Next } from "./next-service.ts";
+import type { HandlerConfig } from "./server-action.ts";
+import { Next, NextPayloadError, NextUnexpectedError } from "./next-service.ts";
 import { RequestContext } from "./request-context.ts";
 
 export const validateFormData = <FormFields extends S.Schema.AnyNoContext>(schema: FormFields, formData: FormData): Effect.Effect<S.Schema.Type<FormFields>, DeriveFormErrors<FormFields>> => S.decodeUnknown(schema, { errors: 'all' })(Object.fromEntries(formData.entries())).pipe(
@@ -23,7 +23,7 @@ export type FormState<State extends S.Schema.AnyNoContext, FormFields extends S.
 export type FormHandlerConfig<State extends S.Schema.AnyNoContext, FormFields extends S.Schema.AnyNoContext, InternalServerError, InvalidPayloadError, ProvidedServices> = {
   state: State
   fields: FormFields,
-  action: (prevState: FormState<State, FormFields>, formFields: S.Schema.Type<FormFields>) => Promise<Effect.Effect<FormState<State, FormFields>, FormState<State, FormFields>, ProvidedServices | Next>>
+  action: (prevState: FormState<State, FormFields>, formFields: S.Schema.Type<FormFields>) => Promise<Effect.Effect<FormState<State, FormFields>, FormState<State, FormFields> | NextUnexpectedError, ProvidedServices | Next>>
   errors: {
     invalidFormData: (errors: DeriveFormErrors<FormFields>, schema: FormFields, rawPayload: FormData) => FormState<State, FormFields>
     unexpected: (cause: Cause.Cause<unknown>) => FormState<State, FormFields>
@@ -44,7 +44,9 @@ export const makeFormHandler = <State extends S.Schema.AnyNoContext, FormFields 
         Effect.mapError((errors) => config.errors.invalidFormData(errors, config.fields, formData))
       )
       const effectFn = yield* Effect.promise(() => config.action(prevState, formFields))
-      return yield* effectFn
+      return yield* effectFn.pipe(
+        Effect.catchTag("NextUnexpectedError", (error) => Effect.fail(config.errors.unexpected(error.cause))),
+      )
     }).pipe(
       Effect.provide(mergedContext),
       Effect.provideService(RequestContext, requestContext)

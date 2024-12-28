@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server.js";
-import { HandlerConfig } from "./server-action.ts";
+import { type NextRequest, NextResponse } from "next/server.js";
+import type { HandlerConfig } from "./server-action.ts";
 import { Array, Cause, Effect, Exit, Layer, Option, Schema as S } from "effect";
 import { Next } from "./next-service.ts";
 import { RequestContext } from "./request-context.ts";
