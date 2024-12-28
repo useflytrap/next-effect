@@ -13,7 +13,7 @@ export type Encoding = {
   readonly contentType: string
 }
 
-const encodingJson: Encoding = {
+export const encodingJson: Encoding = {
   kind: "Json",
   contentType: "application/json"
 }
@@ -30,7 +30,7 @@ const mergedAnnotations = (ast: AST.AST): Record<symbol, unknown> =>
     ast.annotations
 
 export const getResponseAnnotation = <A>(ast: AST.AST, key: symbol): A | undefined => mergedAnnotations(ast)[key] as A
-export const getStatus = (ast: AST.AST): number | undefined => getResponseAnnotation(ast, AnnotationStatus)
+export const getStatus = (ast: AST.AST): number => getResponseAnnotation(ast, AnnotationStatus) ?? 200
 export const getEncoding = (ast: AST.AST): Encoding => getResponseAnnotation(ast, AnnotationEncoding) ?? encodingJson
 
 export const annotations = <A>(
